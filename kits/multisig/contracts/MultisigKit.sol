@@ -39,7 +39,9 @@ contract MultisigKit is BetaKitBase {
         }
 
         MiniMeToken token = popTokenCache(msg.sender);
-        Voting voting = createDAO(
+        Voting voting;
+        TokenManager tokenManager;
+        (voting, tokenManager) = createDAO(
             name,
             token,
             signers,
@@ -59,8 +61,12 @@ contract MultisigKit is BetaKitBase {
             1825 days // ~5 years
         );
 
-        // support modification permission
         ACL acl = ACL(Kernel(voting.kernel()).acl());
+
+        // create vote permission
+        acl.createPermission(tokenManager, voting, voting.CREATE_VOTES_ROLE(), voting);
+
+        // support modification permission
         acl.createPermission(voting, voting, voting.MODIFY_SUPPORT_ROLE(), voting);
 
         cleanupPermission(acl, voting, acl, acl.CREATE_PERMISSIONS_ROLE());

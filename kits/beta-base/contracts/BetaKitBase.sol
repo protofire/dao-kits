@@ -54,7 +54,7 @@ contract BetaKitBase is KitBase {
         uint256 _maxTokens
     )
         internal
-        returns (Voting)
+        returns (Voting, TokenManager)
     {
         Kernel dao = fac.newDAO(this);
 
@@ -79,7 +79,6 @@ contract BetaKitBase is KitBase {
         token.changeController(tokenManager); // sender has to create tokens
 
         // permissions
-        acl.createPermission(ANY_ENTITY, voting, voting.CREATE_VOTES_ROLE(), voting);
         acl.createPermission(voting, voting, voting.MODIFY_QUORUM_ROLE(), voting);
 
         acl.createPermission(finance, vault, vault.TRANSFER_ROLE(), voting);
@@ -111,7 +110,8 @@ contract BetaKitBase is KitBase {
         emit DeployInstance(dao, token);
 
         // voting is returned so init can happen later
-        return voting;
+        // tokenManager is needed for Multisig, for CREATE_VOTES_ROLE
+        return (voting, tokenManager);
     }
 
     function cacheToken(MiniMeToken token, address owner) internal {

@@ -40,7 +40,8 @@ contract DemocracyKit is BetaKitBase {
         external
     {
         MiniMeToken token = popTokenCache(msg.sender);
-        Voting voting = createDAO(
+        Voting voting;
+        (voting, ) = createDAO(
             name,
             token,
             holders,
@@ -54,8 +55,12 @@ contract DemocracyKit is BetaKitBase {
             voteDuration
         );
 
-        // burn support modification permission
         ACL acl = ACL(Kernel(voting.kernel()).acl());
+
+        // create vote permission
+        acl.createPermission(ANY_ENTITY, voting, voting.CREATE_VOTES_ROLE(), voting);
+
+        // burn support modification permission
         acl.createBurnedPermission(voting, voting.MODIFY_SUPPORT_ROLE());
 
         cleanupPermission(acl, voting, acl, acl.CREATE_PERMISSIONS_ROLE());
