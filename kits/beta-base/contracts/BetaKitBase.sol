@@ -102,6 +102,11 @@ contract BetaKitBase is KitBase {
         vault.initialize();
         finance.initialize(vault, uint64(-1) - uint64(now)); // yuge period
 
+        /// EVMScriptRegistry permissions
+        EVMScriptRegistry reg = EVMScriptRegistry(dao.getApp(dao.APP_ADDR_NAMESPACE(), EVMSCRIPT_REGISTRY_APP_ID));
+        acl.createPermission(voting, reg, reg.REGISTRY_ADD_EXECUTOR_ROLE(), voting);
+        acl.createPermission(voting, reg, reg.REGISTRY_MANAGER_ROLE(), voting);
+
         // clean-up
         cleanupPermission(acl, voting, dao, dao.APP_MANAGER_ROLE());
         cleanupPermission(acl, voting, tokenManager, tokenManager.MINT_ROLE());
