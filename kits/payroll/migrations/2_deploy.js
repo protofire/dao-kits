@@ -19,7 +19,11 @@ module.exports = async (deployer, network, accounts, arts = null) => {
     '0x5f6f7e8cc7346a11ca2def8f827b7a0b612c56a1' // aragen's default ENS
   )
 
+console.log('1')
+
   const apmAddr = await artifacts.require('PublicResolver').at(await ens.resolver(namehash('aragonpm.eth'))).addr(namehash('aragonpm.eth'))
+
+console.log('2')
 
   console.log('Deploying DAOFactory...')
   const { daoFactory } = await deployDAOFactory(null, { artifacts, verbose: false })
@@ -34,5 +38,4 @@ module.exports = async (deployer, network, accounts, arts = null) => {
   console.log('PayrollKit:', kit.address)
 
   return kit.address
-}
 }

@@ -12,7 +12,13 @@ import "@aragon/kits-bare/contracts/KitBase.sol";
 
 
 contract PayrollKit is KitBase, APMNamehash {
-    function constructor(DAOFactory _fac, ENS _ens) KitBase(_fac, _ens) {}
+    constructor(
+      DAOFactory _fac,
+      ENS _ens
+    )
+      KitBase(_fac, _ens)
+      public
+    {}
 
     function newInstance(
         address employer,
@@ -39,8 +45,10 @@ contract PayrollKit is KitBase, APMNamehash {
 
         // Payroll permissions
         acl.createPermission(employer, payroll, payroll.ADD_EMPLOYEE_ROLE(), root);
-        acl.createPermission(employer, payroll, payroll.REMOVE_EMPLOYEE_ROLE(), root);
+        acl.createPermission(employer, payroll, payroll.TERMINATE_EMPLOYEE_ROLE(), root);
         acl.createPermission(employer, payroll, payroll.ALLOWED_TOKENS_MANAGER_ROLE(), root);
+        acl.createPermission(employer, payroll, payroll.SET_EMPLOYEE_SALARY_ROLE(), root);
+        acl.createPermission(employer, payroll, payroll.ADD_ACCRUED_VALUE_ROLE(), root);
         acl.createPermission(root, payroll, payroll.CHANGE_PRICE_FEED_ROLE(), root);
         acl.createPermission(root, payroll, payroll.MODIFY_RATE_EXPIRY_ROLE(), root);
 
