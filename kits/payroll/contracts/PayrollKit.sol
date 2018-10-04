@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.24;
 
 import "@aragon/os/contracts/kernel/Kernel.sol";
 import "@aragon/os/contracts/acl/ACL.sol";
@@ -11,17 +11,20 @@ import "@aragon/apps-vault/contracts/Vault.sol";
 import "@aragon/kits-bare/contracts/KitBase.sol";
 
 
-contract PayrollKit is KitBase {
-    function PayrollKit(DAOFactory _fac, ENS _ens) KitBase(_fac, _ens) {}
+contract PayrollKit is KitBase, APMNamehash {
+    function constructor(DAOFactory _fac, ENS _ens) KitBase(_fac, _ens) {}
 
     function newInstance(
         address employer,
         address root,
         uint64 financePeriodDuration,
         address denominationToken,
-        IFeed priceFeed, 
+        IFeed priceFeed,
         uint64 rateExpiryTime
-    ) returns (Kernel dao, Payroll payroll) {
+    )
+      public
+      returns (Kernel dao, Payroll payroll)
+    {
         dao = fac.newDAO(this);
         ACL acl = ACL(dao.acl());
 
@@ -30,7 +33,7 @@ contract PayrollKit is KitBase {
         Vault vault;
         Finance finance;
         (vault, finance, payroll) = deployApps(dao);
- 
+
         finance.initialize(vault, financePeriodDuration);
         payroll.initialize(finance, denominationToken, priceFeed, rateExpiryTime);
 
@@ -52,7 +55,7 @@ contract PayrollKit is KitBase {
 
         cleanupDAOPermissions(dao, acl, root);
 
-        DeployInstance(dao);
+        emit DeployInstance(dao);
     }
 
     function deployApps(Kernel dao) internal returns (Vault, Finance, Payroll) {
@@ -64,31 +67,10 @@ contract PayrollKit is KitBase {
         Finance finance = Finance(dao.newAppInstance(financeAppId, latestVersionAppBase(financeAppId)));
         Payroll payroll = Payroll(dao.newAppInstance(payrollAppId, latestVersionAppBase(payrollAppId)));
 
-        InstalledApp(vault, vaultAppId);
-        InstalledApp(finance, financeAppId);
-        InstalledApp(payroll, payrollAppId);
+        emit InstalledApp(vault, vaultAppId);
+        emit InstalledApp(finance, financeAppId);
+        emit InstalledApp(payroll, payrollAppId);
 
         return (vault, finance, payroll);
-    }
-
-    function cleanupDAOPermissions(Kernel dao, ACL acl, address root) internal {
-        bytes32 daoAppManagerRole = dao.APP_MANAGER_ROLE();
-        // Kernel permission clean up
-        acl.grantPermission(root, dao, daoAppManagerRole);
-        acl.revokePermission(this, dao, daoAppManagerRole);
-        acl.setPermissionManager(root, dao, daoAppManagerRole);
-
-        // ACL permission clean up
-        bytes32 aclCreatePermissionsRole = acl.CREATE_PERMISSIONS_ROLE();
-        acl.grantPermission(root, acl, aclCreatePermissionsRole);
-        acl.revokePermission(this, acl, aclCreatePermissionsRole);
-        acl.setPermissionManager(root, acl, aclCreatePermissionsRole);
-    }
-
-    function latestVersionAppBase(bytes32 appId) public view returns (address base) {
-        Repo repo = Repo(PublicResolver(ens.resolver(appId)).addr(appId));
-        (,base,) = repo.getLatest();
-
-        return base;
     }
 }
