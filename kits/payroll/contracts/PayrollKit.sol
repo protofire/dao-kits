@@ -61,6 +61,11 @@ contract PayrollKit is KitBase, APMNamehash {
         acl.grantPermission(root, vault, vaultTransferRole);
         acl.setPermissionManager(root, vault, vaultTransferRole); // set root as the final manager for the role
 
+        /// EVMScriptRegistry permissions
+        EVMScriptRegistry reg = EVMScriptRegistry(dao.getApp(dao.APP_ADDR_NAMESPACE(), EVMSCRIPT_REGISTRY_APP_ID));
+        acl.createBurnedPermission(reg, reg.REGISTRY_ADD_EXECUTOR_ROLE());
+        acl.createBurnedPermission(reg, reg.REGISTRY_MANAGER_ROLE());
+
         cleanupDAOPermissions(dao, acl, root);
 
         emit DeployInstance(dao);
