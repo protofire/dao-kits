@@ -20,55 +20,58 @@ const createdPayrollDao = receipt => receipt.logs.filter(x => x.event == 'Deploy
 const createdPayrollId = receipt => receipt.logs.filter(x => x.event == 'StartPayroll')[0].args.payroId
 const installedApp = (receipt, appId) => receipt.logs.filter(x => x.event == 'InstalledApp' && x.args.appId === appId)[0].args.appProxy
 
-module.exports = async (deployer, network, accounts) => {
-  const root = accounts[0]
+module.exports = (deployer, network, accounts) => {
+  deployer.then(async () => {
+    const root = accounts[0]
 
-  const ens = ENS.at(
-    process.env.ENS ||
-    '0x5f6f7e8cc7346a11ca2def8f827b7a0b612c56a1' // aragen's default ENS
-  )
-  const payrollKitRepo = Repo.at(
-    await PublicResolver.at(
-      await ens.resolver(payrollKitEnsNode)
-    ).addr(payrollKitEnsNode)
-  )
-  // Contract address is second return of Repo.getLatest()
-  const payrollKit = PayrollKit.at((await payrollKitRepo.getLatest())[1])
+    const ens = ENS.at(
+      process.env.ENS ||
+      '0x5f6f7e8cc7346a11ca2def8f827b7a0b612c56a1' // aragen's default ENS
+    )
+    const payrollKitRepo = Repo.at(
+      await PublicResolver.at(
+        await ens.resolver(payrollKitEnsNode)
+      ).addr(payrollKitEnsNode)
+    )
+    // Contract address is second return of Repo.getLatest()
+    const payrollKit = PayrollKit.at((await payrollKitRepo.getLatest())[1])
 
-  const minimeFac = await MiniMeTokenFactory.new()
-  const denominationToken = await MiniMeToken.new(
-    '0x00',
-    '0x00',
-    '0x00',
-    'USD Dolar',
-    18,
-    'USD',
-    true
-  )
+    // const minimeFac = await MiniMeTokenFactory.new()
+    const denominationToken = await MiniMeToken.new(
+      '0x00',
+      '0x00',
+      '0x00',
+      'USD Dolar',
+      18,
+      'USD',
+      true
+    )
 
-  const ppf = artifacts.require('PPF').new()
+    const ppf = await artifacts.require('PPF').new()
 
-  const SECONDS_IN_A_YEAR = 31557600 // 365.25 days
-  const RATE_EXPIRY_TIME = 1000
+    const SECONDS_IN_A_YEAR = 31557600 // 365.25 days
+    const RATE_EXPIRY_TIME = 1000
 
-  // Create DAO with Payroll installed
-  console.log('Creating Payroll DAO...')
-  const payrollDaoReceipt = await payrollKit.newInstance(
-    root,
-    root,
-    SECONDS_IN_A_YEAR,
-    denominationToken,
-    ppf,
-    RATE_EXPIRY_TIME
-  )
-  const createtDaoAddr = createdPayrollDao(payrollDaoReceipt)
-  const createdAppAddr = installedApp(payrollDaoReceipt, payrollAppId)
+    // Create DAO with Payroll installed
+    console.log('Creating Payroll DAO...')
+    const payrollDaoReceipt = await payrollKit.newInstance(
+      root,
+      root,
+      SECONDS_IN_A_YEAR,
+      denominationToken.address,
+      ppf.address,
+      RATE_EXPIRY_TIME
+    )
 
-  // TODO: Create some sample data
+    const payrollDaoAddr = createdPayrollDao(payrollDaoReceipt)
+    const payrollAppAddr = installedApp(payrollDaoReceipt, payrollAppId)
 
-  console.log('===========')
-  console.log('Payroll demo DAO set up!')
-  console.log('Payroll DAO:', payrollDaoAddr)
-  console.log("Payroll DAO's Payroll app:", payrollAppAddr)
-  console.log('Payroll Token:', denominationToken.address)
+    // TODO: Create some sample data
+
+    console.log('===========')
+    console.log('Payroll demo DAO set up!')
+    console.log('Payroll DAO:', payrollDaoAddr)
+    console.log("Payroll DAO's Payroll app:", payrollAppAddr)
+    console.log('Payroll Token:', denominationToken.address)
+  })
 }
